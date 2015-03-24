@@ -36,7 +36,7 @@ def download_pages(links, out_dir):
 		with open(out_file, "wb") as fp:
 			fp.write(image)
 		files.append(out_file)
-	return sorted(files)
+	return sorted(files) 
 
 def images_to_pdf(files, pdf_path):
 	return subprocess.call(["convert"] + files + [pdf_path])
