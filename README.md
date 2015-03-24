@@ -2,7 +2,7 @@
 
 Download ebooks from Scribd.
 
-= Dependencies
+## Dependencies
 
 *	python3
 *	requests
@@ -13,7 +13,7 @@ On Debian-like systems, you can install all of the above with:
 	sudo apt-get install python3 python3-requests imagemagick
 
 
-= Howto
+## Howto
 
 	$ url='https://www.scribd.com/doc/209105154/Schlegel'
 	$ ./scribd_dl.py $url Article.pdf

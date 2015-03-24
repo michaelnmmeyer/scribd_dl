@@ -31,11 +31,7 @@ def download_pages(links, out_dir):
 	files = []
 	for link in links:
 		page_num = link.rsplit("/", 1)[1].split("-", 1)[0]
-		try:
-			out_file = os.path.join(out_dir, "%03d.jpg" % int(page_num))
-		except:
-			print(link)
-			raise
+		out_file = os.path.join(out_dir, "%03d.jpg" % int(page_num))
 		image = download_image(link)
 		with open(out_file, "wb") as fp:
 			fp.write(image)
