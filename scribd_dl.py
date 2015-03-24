@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, sys, re, requests, subprocess, tempfile
+import os, sys, re, requests, subprocess, tempfile, shutil
 
 def extract_links(html):
 	links = set()
@@ -36,17 +36,21 @@ def download_pages(links, out_dir):
 		with open(out_file, "wb") as fp:
 			fp.write(image)
 		files.append(out_file)
-	return sorted(files) 
+	files.sort()
+	return files
 
 def images_to_pdf(files, pdf_path):
-	return subprocess.call(["convert"] + files + [pdf_path])
+	subprocess.check_call(["convert"] + files + [pdf_path])
 
+def extract_filename(url):
+	return url.rsplit("/", 1)[1] + ".pdf"
 
-if len(sys.argv) != 3:
-	print("Usage: %s <link> <book_path>" % os.path.basename(__file__), file=sys.stderr)
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+	print("Usage: %s <link> [book_path]" % os.path.basename(__file__), file=sys.stderr)
 	exit(1)
 
-link, pdf_path = sys.argv[1], sys.argv[2]
+link = sys.argv[1]
+pdf_path = len(sys.argv) > 2 and sys.argv[2] or extract_filename(link)
 
 r = requests.get(link)
 assert r.status_code == 200
@@ -54,17 +58,8 @@ links = extract_links(r.text)
 assert links
 
 out_dir = tempfile.mkdtemp()
-files = []
 try:
 	files = download_pages(links, out_dir)
 	images_to_pdf(files, pdf_path)
 finally:
-	for file in files:
-		try:
-			os.remove(file)
-		except IOError:
-			pass
-	try:
-		os.rmdir(out_dir)
-	except IOError:
-		pass
+	shutil.rmtree(out_dir)
