@@ -1,3 +1,4 @@
+# Installation path.
 BIN_PATH = /usr/local/bin/scribd_dl
 
 all:
@@ -13,4 +14,7 @@ check:
 	pdfinfo Book.pdf | egrep -q '^Pages:[ ]+10$$'
 	rm -f Book.pdf
 
-.PHONY: all install uninstall check
+commit: check
+	git add . && git commit
+
+.PHONY: all install uninstall check commit
