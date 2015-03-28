@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, sys, re, requests, subprocess, tempfile, shutil
+import unicodedata
 
 def extract_links(html):
 	links = set()
@@ -40,23 +41,26 @@ def download_pages(links, out_dir):
 	return files
 
 def images_to_pdf(files, pdf_path):
-	subprocess.check_call(["convert"] + files + [pdf_path])
+	subprocess.check_call(["convert"] + files + ["pdf:%s" % pdf_path])
 
-def extract_filename(url):
-	return url.rsplit("/", 1)[1] + ".pdf"
+def extract_filename(page):
+	title = re.findall(r"<title>(.+?)</title>", page, re.I)
+	assert len(title) == 1
+	title = unicodedata.normalize("NFKC", title[0])
+	# Who knows...
+	return title.replace("/", "_") + ".pdf"
 
 if len(sys.argv) < 2 or len(sys.argv) > 3:
 	print("Usage: %s <link> [book_path]" % os.path.basename(__file__), file=sys.stderr)
 	exit(1)
 
 link = sys.argv[1]
-pdf_path = len(sys.argv) > 2 and sys.argv[2] or extract_filename(link)
-
 r = requests.get(link)
 assert r.status_code == 200
 links = extract_links(r.text)
 assert links
 
+pdf_path = len(sys.argv) > 2 and sys.argv[2] or extract_filename(r.text)
 out_dir = tempfile.mkdtemp()
 try:
 	files = download_pages(links, out_dir)
