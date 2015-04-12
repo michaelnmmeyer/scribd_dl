@@ -3,6 +3,7 @@
 import os, sys, re, requests, subprocess, tempfile, shutil
 import unicodedata
 
+
 def extract_links(html):
 	links = set()
 	
@@ -22,17 +23,36 @@ def extract_links(html):
 	
 	return links
 
+# https://html2-f.scribdassets.com/7uazckj1ds380hol/images/29-93d362946c.jpg -> 29
+def extract_page_num(link):
+	return int(link.rsplit("/", 1)[1].split("-", 1)[0])
+
+# There must be at least one link (at least one page), and one link per page.
+# Checking for an interval is not enough because there could be several aliases
+# for the same page (say 29-93d362946c and 29-bfc3187991), so we must also check
+# the real number of pages.
+def check_links(links):
+	assert links, "no links found"
+	page_nums = set()
+	num_pages = 0
+	for link in links:
+		page_num = extract_page_num(link)
+		page_nums.add(page_num)
+		if page_num > num_pages:
+			num_pages = page_num
+	assert len(page_nums) == num_pages, "missing pages"
+
 def download_image(url):
 	print(url, file=sys.stderr)
 	r = requests.get(url, stream=True)
-	assert r.status_code == 200
+	assert r.status_code == 200, "can't download image at '%s'" % url
 	return r.raw.read()
 
 def download_pages(links, out_dir):
 	files = []
 	for link in links:
-		page_num = link.rsplit("/", 1)[1].split("-", 1)[0]
-		out_file = os.path.join(out_dir, "%03d.jpg" % int(page_num))
+		page_num = extract_page_num(link)
+		out_file = os.path.join(out_dir, "%03d.jpg" % page_num)
 		image = download_image(link)
 		with open(out_file, "wb") as fp:
 			fp.write(image)
@@ -45,9 +65,9 @@ def images_to_pdf(files, pdf_path):
 
 def extract_filename(page):
 	title = re.findall(r"<title>(.+?)</title>", page, re.I)
-	assert len(title) == 1
+	assert len(title) == 1, "can't extract the book title"
 	title = unicodedata.normalize("NFKC", title[0])
-	# Who knows...
+	# Don't assume the file name is legit.
 	return title.replace("/", "_") + ".pdf"
 
 if len(sys.argv) < 2 or len(sys.argv) > 3:
@@ -56,9 +76,9 @@ if len(sys.argv) < 2 or len(sys.argv) > 3:
 
 link = sys.argv[1]
 r = requests.get(link)
-assert r.status_code == 200
+assert r.status_code == 200, "can't download page at '%s'" % link
 links = extract_links(r.text)
-assert links
+check_links(links)
 
 pdf_path = len(sys.argv) > 2 and sys.argv[2] or extract_filename(r.text)
 out_dir = tempfile.mkdtemp()

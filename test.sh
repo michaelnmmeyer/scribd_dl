@@ -17,4 +17,9 @@ echo "Ensure a PDF file is produced even if the output filename doesn't have an 
 test -f foobar
 rm foobar
 
+echo "Ensure whe can use spaces in the output file name."
+./scribd_dl.py 'https://www.scribd.com/doc/6073806/Moliendo-cafe' 'foo  bar'
+test -f 'foo  bar'
+rm 'foo  bar'
+
 exit 0
