@@ -3,7 +3,6 @@
 import os, sys, re, requests, subprocess, tempfile, shutil
 import unicodedata
 
-
 def extract_links(html):
 	links = set()
 	
@@ -77,6 +76,13 @@ if len(sys.argv) < 2 or len(sys.argv) > 3:
 link = sys.argv[1]
 r = requests.get(link)
 assert r.status_code == 200, "can't download page at '%s'" % link
+
+if "docManager.addFont" in r.text:
+   me = os.path.basename(sys.argv[0])
+   print("%s: PDFs with embedded text not supported" % me, file=sys.stderr)
+   print("%s: Try https://github.com/tobiasBora/Scribd-downloader/blob/master/scribd_download.sh" % me, file=sys.stderr)
+   sys.exit(1)
+
 links = extract_links(r.text)
 check_links(links)
 

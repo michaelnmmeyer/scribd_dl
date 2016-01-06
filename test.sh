@@ -2,6 +2,9 @@
 
 set -e
 
+echo 'Early failure if we cannot download the PDF.' 
+./scribd_dl.py 'https://www.scribd.com/doc/141757042/Atlas-de-Patologia-Del-Complejo-Bucal' 2>&1 | grep -q 'embedded text not supported'
+
 echo 'Ensure all pages are extracted.'
 ./scribd_dl.py 'https://www.scribd.com/doc/209105154/Schlegel' Book.pdf
 pdfinfo Book.pdf | egrep -q '^Pages:[ ]+10$$'
